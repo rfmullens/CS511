@@ -40,8 +40,25 @@ public class TextSwap {
     private static char[] runSwapper(String content, int chunkSize, int numChunks) {
         List<Character> labels = getLabels(numChunks);
         Interval[] intervals = getIntervals(numChunks, chunkSize);
-        // TODO: Order the intervals properly, then run the Swapper instances.
-        return null;
+        
+        Interval[] newInterval = new Interval[numChunks];
+        for(int i = 0; i<labels.size(); i++){
+            newInterval[i] = intervals[labels.get(i) - 'a'];
+        }
+
+        char[] newBuff = new char[chunkSize*numChunks];
+        Thread[] threadList = new Thread[numChunks];
+        for(int j = 0; j < numChunks; j++){
+            Thread newThread = new Thread(new Swapper(newInterval[j], content, newBuff, j*chunkSize));
+            threadList[j] = newThread;
+            newThread.start();
+        }
+        for(int k = 0; k < threadList.length; k++){
+            try{
+                threadList[k].join();
+            } catch(InterruptedException ignore){}
+        }
+        return newBuff;
     }
 
     private static void writeToFile(String contents, int chunkSize, int numChunks) throws Exception {
@@ -58,6 +75,7 @@ public class TextSwap {
         }
         String contents = "";
         int chunkSize = Integer.parseInt(args[0]);
+
         try {
             contents = readFile(args[1]);
             writeToFile(contents, chunkSize, contents.length() / chunkSize);
