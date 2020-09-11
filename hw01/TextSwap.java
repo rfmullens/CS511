@@ -16,8 +16,12 @@ public class TextSwap {
     }
 
     private static Interval[] getIntervals(int numChunks, int chunkSize) {
-        // TODO: Implement me!
-        return null;
+        Interval[] bufferarray = new Interval[numChunks];
+        for(int i=0; i < numChunks; i++){
+            Interval buffer = new Interval(i*chunkSize, (chunkSize*(i+1)-1));
+            bufferarray[i] = buffer;
+        }
+        return bufferarray;
     }
 
     private static List<Character> getLabels(int numChunks) {
