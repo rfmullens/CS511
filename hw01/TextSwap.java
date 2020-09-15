@@ -1,6 +1,6 @@
 import java.io.*;
 import java.util.*;
-
+//I pledge my honor that I have abided by the Stevens Honor System Ryan Mullens And Sun bachrach
 public class TextSwap {
 
     private static String readFile(String filename) throws Exception {
@@ -16,8 +16,8 @@ public class TextSwap {
     }
 
     private static Interval[] getIntervals(int numChunks, int chunkSize) {
-        Interval[] bufferarray = new Interval[numChunks];
-        for(int i=0; i < numChunks; i++){
+        Interval[] bufferarray = new Interval[numChunks]; //creates a new array of Intervals = to Interval[numChunks]
+        for(int i = 0; i < numChunks; i++){
             Interval buffer = new Interval(i*chunkSize, (chunkSize*(i+1)-1));
             bufferarray[i] = buffer;
         }
@@ -40,23 +40,27 @@ public class TextSwap {
     private static char[] runSwapper(String content, int chunkSize, int numChunks) {
         List<Character> labels = getLabels(numChunks);
         Interval[] intervals = getIntervals(numChunks, chunkSize);
-        
         Interval[] newInterval = new Interval[numChunks];
-        for(int i = 0; i<labels.size(); i++){
-            newInterval[i] = intervals[labels.get(i) - 'a'];
-        }
-
         char[] newBuff = new char[chunkSize*numChunks];
         Thread[] threadList = new Thread[numChunks];
+
+        for(int i = 0; i< labels.size(); i++){
+            newInterval[i] = intervals[(labels.get(i)) - 'a'];
+        }
+
+        
         for(int j = 0; j < numChunks; j++){
-            Thread newThread = new Thread(new Swapper(newInterval[j], content, newBuff, j*chunkSize));
+            int offset = j *chunkSize;
+            Thread newThread = new Thread(new Swapper(newInterval[j], content, newBuff, offset));
             threadList[j] = newThread;
             newThread.start();
         }
         for(int k = 0; k < threadList.length; k++){
             try{
                 threadList[k].join();
-            } catch(InterruptedException ignore){}
+            } catch(InterruptedException except){
+                except.printStackTrace();
+            }
         }
         return newBuff;
     }
