@@ -57,9 +57,9 @@ public class TextSwap {
         }
         for(int k = 0; k < threadList.length; k++){
             try{
-                threadList[k].join();
+                threadList[k].join(); //joins the threads
             } catch(InterruptedException except){
-                except.printStackTrace();
+                except.printStackTrace(); //If the threads raise an exception print
             }
         }
         return newBuff;
@@ -80,6 +80,18 @@ public class TextSwap {
         String contents = "";
         int chunkSize = Integer.parseInt(args[0]);
 
+        File file = new File(args[1]);
+
+        //Check for over the maximum of chunks
+        if(file.length() / chunkSize > 26){	
+		    System.out.println("Chunk size too small");
+		    return;
+	    }
+        //check for if the file length is divisible by chunkSize
+        if(file.length() % chunkSize != 0){ 
+		    System.out.println("File size must be a multiple of the chunk size");
+		    return;
+	    }
         try {
             contents = readFile(args[1]);
             writeToFile(contents, chunkSize, contents.length() / chunkSize);
