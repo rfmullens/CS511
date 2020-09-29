@@ -49,7 +49,7 @@ public class Bakery implements Runnable {
         availableBread.put(BreadType.SOURDOUGH, FULL_BREAD);
         availableBread.put(BreadType.WONDER, FULL_BREAD);
 
-        // TODO (partially done or all of it idk?)
+        // TODO (partially done)
         //Creates pool for the capacity of threads, Limits number of threads 
         ExecutorService pool = Executors.newFixedThreadPool(ALLOWED_CUSTOMERS); 
 

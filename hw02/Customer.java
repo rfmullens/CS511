@@ -14,6 +14,9 @@ public class Customer implements Runnable {
      */
     public Customer(Bakery bakery) {
         // TODO
+        this.shoppingCart = fillShoppingCart(); //Fills the customers shopping cart with what they want to buy (more of a shopping list i think)
+        this.shopTime =  rnd.nextInt(200); //randomly creates a time that the customer will be shopping between 0 and 200 ms
+        this.checkoutTime = rnd.nextInt(100); //randomly creates a time that the customer will be checking out between 0 and 100 ms
     }
 
     /**
@@ -21,6 +24,8 @@ public class Customer implements Runnable {
      */
     public void run() {
         // TODO
+        System.out.println("A wild customer approaches " + toString()); //prints out a representation of each customer
+        //The real meat of the assingnment begins here
     }
 
     /**
