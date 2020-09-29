@@ -49,6 +49,19 @@ public class Bakery implements Runnable {
         availableBread.put(BreadType.SOURDOUGH, FULL_BREAD);
         availableBread.put(BreadType.WONDER, FULL_BREAD);
 
-        // TODO
+        // TODO (partially done or all of it idk?)
+        //Creates pool for the capacity of threads, Limits number of threads 
+        ExecutorService pool = Executors.newFixedThreadPool(ALLOWED_CUSTOMERS); 
+
+        //creates customers...
+        //and then executes them
+        for(int i=0; i<TOTAL_CUSTOMERS; i++){
+            Customer newCustomer = new Customer(i);
+            pool.execute(newCustomer); 
+            //initialize customers from the total customer pool here
+        }
+
+        //pool's closed
+        pool.shutdown();
     }
 }
