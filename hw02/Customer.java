@@ -24,7 +24,7 @@ public class Customer implements Runnable {
      */
     public void run() {
         // TODO
-        System.out.println("A wild customer approaches " + toString()); //prints out a representation of each customer
+        System.out.println("A wild customer appears " + toString()); //prints out a representation of each customer
         //The real meat of the assingnment begins here
     }
 
