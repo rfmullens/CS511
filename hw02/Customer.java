@@ -9,6 +9,7 @@ public class Customer implements Runnable {
     private List<BreadType> shoppingCart;
     private int shopTime;
     private int checkoutTime;
+    
 
     /**
      * Initialize a customer object and randomize its shopping cart
@@ -19,8 +20,8 @@ public class Customer implements Runnable {
         this.bakery = bakery;
         this.rnd = new Random();
         this.shoppingCart = new ArrayList<BreadType>();
-        this.shopTime =  rnd.nextInt(4); //randomly creates a time that the customer will be shopping between 0 and 200 ms
-        this.checkoutTime = rnd.nextInt(3); //randomly creates a time that the customer will be checking out between 0 and 100 ms
+        this.shopTime =  rnd.nextInt(400); //randomly creates a time that the customer will be shopping between 0 and 200 ms
+        this.checkoutTime = rnd.nextInt(300); //randomly creates a time that the customer will be checking out between 0 and 100 ms
         fillShoppingCart(); //Fills the customers shopping cart with what they want to buy (more of a shopping list i think)
     }
 
@@ -31,7 +32,6 @@ public class Customer implements Runnable {
         // TODO
         //This function models a customers journey through the store
         //Print out when a customer starts shopping, takes an item, buys and finishes 4 places
-        
         System.out.println("A wild customer appears " + toString()); //prints out a representation of each customer
         
         //make sure ot get all bread properly and atomicly
@@ -63,12 +63,13 @@ public class Customer implements Runnable {
                 System.out.println("Failed to get something");
         }
 
+
         //go to cashiers when one is avaiable and update sales
         try{
         Bakery.Cashiers.acquire();
         Thread.sleep(checkoutTime);
         bakery.addSales(getItemsValue());
-        System.out.println("check out for " + getItemsValue() + " " + toString());
+        System.out.println("check out for $" + getItemsValue() + " " + toString());
         //insert totaling sales and other stuff
         Bakery.Cashiers.release();
         }

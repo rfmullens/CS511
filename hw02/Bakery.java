@@ -3,6 +3,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Bakery implements Runnable {
     private static final int TOTAL_CUSTOMERS = 200;
@@ -11,6 +12,7 @@ public class Bakery implements Runnable {
     private Map<BreadType, Integer> availableBread;
     private ExecutorService executor;
     private float sales = 0;
+    public int peopleInStore;
 
     // TODO
     //One semaphore for access to each shelf
@@ -61,18 +63,23 @@ public class Bakery implements Runnable {
 
         // TODO (partially done)
         //Creates pool for the capacity of threads, Limits number of threads 
-        ExecutorService pool = Executors.newFixedThreadPool(ALLOWED_CUSTOMERS); 
+        executor = Executors.newFixedThreadPool(ALLOWED_CUSTOMERS); 
 
         //creates customers...
         //and then executes them
         for(int i=0; i<TOTAL_CUSTOMERS; i++){
             Customer newCustomer = new Customer(this);
-            pool.execute(newCustomer); 
+            executor.execute(newCustomer); 
             //initialize customers from the total customer pool here
         }
-        System.out.println("Total Sales " +  sales);
         //pool's closed
-        pool.shutdown();
+        executor.shutdown();
+        try{
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        System.out.println("Total sales: $" + sales);
+        }catch(InterruptedException exc){
+            System.out.println("Failed to get something");
+        }
         
     }
 }
