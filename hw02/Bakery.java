@@ -13,7 +13,17 @@ public class Bakery implements Runnable {
     private float sales = 0;
 
     // TODO
+    //One semaphore for access to each shelf
+    public static Semaphore accessRye = new Semaphore(1);
+    public static Semaphore accessSourdough = new Semaphore(1);
+    public static Semaphore accessWonder = new Semaphore(1);
 
+    public static Semaphore accessCheckout = new Semaphore(1);
+
+    // Semaphores
+    //Use the bread map to keep track of bread
+    final static Semaphore Cashiers = new Semaphore(4);
+    
     /**
      * Remove a loaf from the available breads and restock if necessary
      */
@@ -56,7 +66,7 @@ public class Bakery implements Runnable {
         //creates customers...
         //and then executes them
         for(int i=0; i<TOTAL_CUSTOMERS; i++){
-            Customer newCustomer = new Customer(i);
+            Customer newCustomer = new Customer(this);
             pool.execute(newCustomer); 
             //initialize customers from the total customer pool here
         }
