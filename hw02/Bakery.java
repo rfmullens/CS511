@@ -70,8 +70,9 @@ public class Bakery implements Runnable {
             pool.execute(newCustomer); 
             //initialize customers from the total customer pool here
         }
-
+        System.out.println("Total Sales " +  sales);
         //pool's closed
         pool.shutdown();
+        
     }
 }

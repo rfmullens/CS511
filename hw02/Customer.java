@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -14,9 +15,13 @@ public class Customer implements Runnable {
      */
     public Customer(Bakery bakery) {
         // TODO
+        
+        this.bakery = bakery;
+        this.rnd = new Random();
+        this.shoppingCart = new ArrayList<BreadType>();
+        this.shopTime =  rnd.nextInt(4); //randomly creates a time that the customer will be shopping between 0 and 200 ms
+        this.checkoutTime = rnd.nextInt(3); //randomly creates a time that the customer will be checking out between 0 and 100 ms
         fillShoppingCart(); //Fills the customers shopping cart with what they want to buy (more of a shopping list i think)
-        this.shopTime =  rnd.nextInt(200); //randomly creates a time that the customer will be shopping between 0 and 200 ms
-        this.checkoutTime = rnd.nextInt(100); //randomly creates a time that the customer will be checking out between 0 and 100 ms
     }
 
     /**
@@ -26,6 +31,7 @@ public class Customer implements Runnable {
         // TODO
         //This function models a customers journey through the store
         //Print out when a customer starts shopping, takes an item, buys and finishes 4 places
+        
         System.out.println("A wild customer appears " + toString()); //prints out a representation of each customer
         
         //make sure ot get all bread properly and atomicly
@@ -35,19 +41,22 @@ public class Customer implements Runnable {
             Bakery.accessRye.acquire(); //Checks to see if the customer can get to the shelf
             Thread.sleep(shopTime); // sleeps for the shop time
             bakery.takeBread(BreadType.RYE); //takes the bread and updates
+            System.out.println(toString() + " Reaches and takes some RYE bread");
             //print the bread
             Bakery.accessRye.release();
             }
             if(shoppingCart.contains(BreadType.SOURDOUGH)){
             Bakery.accessSourdough.acquire();
             bakery.takeBread(BreadType.SOURDOUGH);
+            System.out.println(toString() + " Doughs not really know what to take but takes some SOURDOUGH bread");
             Thread.sleep(shopTime);
             Bakery.accessSourdough.release();
             }
             if(shoppingCart.contains(BreadType.WONDER)){
             Bakery.accessWonder.acquire();
-            bakery.takeBread(BreadType.WONDER);
             Thread.sleep(shopTime);
+            bakery.takeBread(BreadType.WONDER);
+            System.out.println(toString() + " Wonders what to take, and eventually settles on WONDER bread");
             Bakery.accessWonder.release();
             }
             }catch (InterruptedException exc) { 
@@ -58,6 +67,8 @@ public class Customer implements Runnable {
         try{
         Bakery.Cashiers.acquire();
         Thread.sleep(checkoutTime);
+        bakery.addSales(getItemsValue());
+        System.out.println("check out for " + getItemsValue() + " " + toString());
         //insert totaling sales and other stuff
         Bakery.Cashiers.release();
         }
@@ -65,7 +76,7 @@ public class Customer implements Runnable {
                 System.out.println("Failed to get something");
         }
 
-
+        
     }
     }
 
