@@ -30,34 +30,43 @@ public class Customer implements Runnable {
         
         //make sure ot get all bread properly and atomicly
         for(int i = 0; i < shoppingCart.size(); i++ ){
+            try{
             if(shoppingCart.contains(BreadType.RYE)){ //shopping cart contains x bread
             Bakery.accessRye.acquire(); //Checks to see if the customer can get to the shelf
             Thread.sleep(shopTime); // sleeps for the shop time
-            Bakery.takeBread(BreadType.RYE); //takes the bread and updates
+            bakery.takeBread(BreadType.RYE); //takes the bread and updates
             //print the bread
             Bakery.accessRye.release();
             }
             if(shoppingCart.contains(BreadType.SOURDOUGH)){
             Bakery.accessSourdough.acquire();
-            Bakery.takeBread(BreadType.SOURDOUGH);
+            bakery.takeBread(BreadType.SOURDOUGH);
             Thread.sleep(shopTime);
             Bakery.accessSourdough.release();
             }
             if(shoppingCart.contains(BreadType.WONDER)){
             Bakery.accessWonder.acquire();
-            Bakery.takeBread(BreadType.WONDER);
+            bakery.takeBread(BreadType.WONDER);
             Thread.sleep(shopTime);
             Bakery.accessWonder.release();
             }
+            }catch (InterruptedException exc) { 
+                System.out.println("Failed to get something");
         }
 
         //go to cashiers when one is avaiable and update sales
+        try{
         Bakery.Cashiers.acquire();
         Thread.sleep(checkoutTime);
         //insert totaling sales and other stuff
         Bakery.Cashiers.release();
+        }
+        catch (InterruptedException exc) { 
+                System.out.println("Failed to get something");
+        }
 
 
+    }
     }
 
     /**
