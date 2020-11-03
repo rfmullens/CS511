@@ -17,8 +17,11 @@ get_occupied_docks(Shipping_State, Port_ID) ->
     lists:map(fun(Y) -> element(2,Y) end, lists:filter(fun(X) -> element(1,X) == Port_ID end, Shipping_State#shipping_state.ship_locations)).
 
 get_ship_location(Shipping_State, Ship_ID) ->
-    io:format("Implement me!!"),
-    error.
+    filteredlist = lists:filter(fun(y) -> element(2,y) != ship_id),
+    Shipping_State#shipping_state.ship_locations),
+    [Head|Tail] = filteredlist,
+    {val1, val2, val3} = Head,
+    {val1, val2}.
 
 get_container_weight(Shipping_State, Container_IDs) ->
     io:format("Implement me!!"),
