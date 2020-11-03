@@ -3,6 +3,7 @@
 -include_lib("./shipping.hrl").
 %Ryan Mullens and Sun Bachrach
 
+%Add error handling on 1-4
 get_ship(Shipping_State, Ship_ID) ->
     lists:keyfind(Ship_ID, 2, Shipping_State#shipping_state.ships).
 
