@@ -38,13 +38,18 @@ get_ship_location(Shipping_State, Ship_ID) ->
         [{Port, Dock, _}] -> {Port, Dock}
     end.
 
-%need to fix errors on this one
+
 get_container_weight(Shipping_State, Container_IDs) ->
-    lists:foldl(fun(L, Sum) -> (case get_container(Shipping_State, L) of
-        error -> error;
-        B -> B#container.weight
-        end) 
-    + Sum end, 0, Container_IDs).
+    List_Containers = (Shipping_State)#shipping_state.containers,
+    case Container_IDs of
+        [X | Y] -> 
+            Sum = lists:keyfind(X, #container.id, List_Containers),
+            case Sum of
+                false -> error;
+                _ -> Sum#container.weight + get_container_weight(Shipping_State, Y)
+            end;
+        [] -> 0
+    end.
 
 get_ship_weight(Shipping_State, Ship_ID) ->
     Test = maps:is_key(Ship_ID, Shipping_State#shipping_state.ship_inventory),
