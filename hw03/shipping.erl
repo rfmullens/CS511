@@ -5,32 +5,55 @@
 
 %Add error handling on 1-8
 get_ship(Shipping_State, Ship_ID) ->
-    lists:keyfind(Ship_ID, 2, Shipping_State#shipping_state.ships).
+   Search = lists:keyfind(Ship_ID, #ship.id, (Shipping_State)#shipping_state.ships),
+   case Search of
+       false -> error;
+       _ -> Search
+    end.
 
 get_container(Shipping_State, Container_ID) ->
-    lists:keyfind(Container_ID, 2, Shipping_State#shipping_state.containers).
+    Search = lists:keyfind(Container_ID, #container.id, Shipping_State#shipping_state.containers),
+    case Search of
+       false -> error;
+       _ -> Search
+    end.
 
 get_port(Shipping_State, Port_ID) ->
-    lists:keyfind(Port_ID, 2, Shipping_State#shipping_state.ports).
+    Search = lists:keyfind(Port_ID, #port.id, Shipping_State#shipping_state.ports),
+    case Search of
+       false -> error;
+       _ -> Search
+    end.
 
 get_occupied_docks(Shipping_State, Port_ID) ->
-    lists:map(fun(Y) -> element(2,Y) end, lists:filter(fun(X) -> element(1,X) == Port_ID end, Shipping_State#shipping_state.ship_locations)).
+    Search = lists:map(fun(Y) -> element(2,Y) end, lists:filter(fun(X) -> element(1,X) == Port_ID end, Shipping_State#shipping_state.ship_locations)),
+    case Search of
+       false -> error;
+       _ -> Search
+    end.
 
 get_ship_location(Shipping_State, Ship_ID) ->
-    X = lists:keyfind(Ship_ID, 3, Shipping_State#shipping_state.ship_locations),
-    {element(1, X), element(2, X)}.
+    case lists:filter(fun({_, _, Ship}) -> Ship==Ship_ID end, Shipping_State#shipping_state.ship_locations) of
+        [] -> error;
+        [{Port, Dock, _}] -> {Port, Dock}
+    end.
 
+%need to fix errors on this one
 get_container_weight(Shipping_State, Container_IDs) ->
-    lists:foldl(fun(L, Sum) -> L + Sum end, 0, 
-        lists:map(fun(J) -> J#container.weight end, 
-        lists:flatten(lists:map(fun(X) ->
-            lists:filter(fun(Y) -> Y#container.id == X end,
-            Shipping_State#shipping_state.containers) end, Container_IDs)))).
+    lists:foldl(fun(L, Sum) -> (case get_container(Shipping_State, L) of
+        error -> error;
+        B -> B#container.weight
+        end) 
+    + Sum end, 0, Container_IDs).
 
 get_ship_weight(Shipping_State, Ship_ID) ->
-    get_container_weight(Shipping_State, maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory)).
+    Test = maps:is_key(Ship_ID, Shipping_State#shipping_state.ship_inventory),
+    case Test of
+        false -> error;
+        true -> get_container_weight(Shipping_State, maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory))
+    end.
 
-get_container_port(Shipping_State, Container_ID) -> % Container has to be in a port
+get_container_port(Shipping_State, Container_ID) -> 
   lists:nth(1, maps:keys(maps:filter(fun(_K, V) -> lists:member(Container_ID, V) end, Shipping_State#shipping_state.port_inventory))).
 
 get_container_ship(Shipping_State, Container_ID) ->
@@ -44,41 +67,41 @@ get_container_ship(Shipping_State, Container_ID) ->
 
 
 load_ship(Shipping_State, Ship_ID, Container_IDs) ->
-    Old_Ship_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
+    Old_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
     Ship = get_ship(Shipping_State, Ship_ID),
     Port = get_container_port(Shipping_State, lists:nth(1, Container_IDs)),
     Temp = lists:filter(fun(Container) -> get_container_port(Shipping_State, Container) /= Port end, Container_IDs),
     if
-        length(Old_Ship_Inventory) + length(Container_IDs) > Ship#ship.container_cap ->
+        length(Old_Inventory) + length(Container_IDs) > Ship#ship.container_cap ->
             error;
         Temp /= [] ->
             error;
         true ->
-            New_Ship_Inventory = lists:append(Old_Ship_Inventory, Container_IDs),
+            Ship_Inventory = lists:append(Old_Inventory, Container_IDs),
             New_Port_Inventory = lists:filter(fun (Elem) -> not lists:member(Elem, Container_IDs) end, maps:get(Port, Shipping_State#shipping_state.port_inventory)),
-            Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID, New_Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
+            Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID, Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
             port_inventory = maps:update(Port, New_Port_Inventory, Shipping_State#shipping_state.port_inventory)},
       Result
   end.
 
 unload_ship_all(Shipping_State, Ship_ID) ->
     Port = get_port(Shipping_State, element(1, get_ship_location(Shipping_State, Ship_ID))),
-    Old_Ship_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
+    Old_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
     Old_Port_Inventory = maps:get(Port#port.id, Shipping_State#shipping_state.port_inventory),
     if
-        length(Old_Port_Inventory) + length(Old_Ship_Inventory) > Port#port.container_cap ->
+        length(Old_Port_Inventory) + length(Old_Inventory) > Port#port.container_cap ->
             error;
         true ->
-            New_Ship_Inventory = [],
-            New_Port_Inventory = lists:append(Old_Port_Inventory, Old_Ship_Inventory),
-            Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID,  New_Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
+            Ship_Inventory = [],
+            New_Port_Inventory = lists:append(Old_Port_Inventory, Old_Inventory),
+            Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID,  Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
             port_inventory = maps:update(Port#port.id, New_Port_Inventory, Shipping_State#shipping_state.port_inventory)},
             Result
     end.
 
 unload_ship(Shipping_State, Ship_ID, Container_IDs) ->
     Port = get_port(Shipping_State, element(1, get_ship_location(Shipping_State, Ship_ID))),
-    Old_Ship_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
+    Old_Inventory = maps:get(Ship_ID, Shipping_State#shipping_state.ship_inventory),
     Old_Port_Inventory = maps:get(Port#port.id, Shipping_State#shipping_state.port_inventory),
     Test = lists:filter(fun(Container) -> get_container_ship(Shipping_State, Container) /= Ship_ID end, Container_IDs),
         if
@@ -87,9 +110,9 @@ unload_ship(Shipping_State, Ship_ID, Container_IDs) ->
             Test /= [] ->
         error;
     true ->
-      New_Ship_Inventory = lists:filter(fun (Elem) -> not lists:member(Elem, Container_IDs) end, Old_Ship_Inventory),
+      Ship_Inventory = lists:filter(fun (Elem) -> not lists:member(Elem, Container_IDs) end, Old_Inventory),
       New_Port_Inventory = lists:append(Old_Port_Inventory, Container_IDs),
-      Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID, New_Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
+      Result = Shipping_State#shipping_state{ship_inventory = maps:update(Ship_ID, Ship_Inventory, Shipping_State#shipping_state.ship_inventory),
       port_inventory = maps:update(Port#port.id, New_Port_Inventory, Shipping_State#shipping_state.port_inventory)},
       Result
     end.
