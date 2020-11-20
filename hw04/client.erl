@@ -123,13 +123,38 @@ do_join(State, Ref, ChatName) ->
 
 %% executes `/leave` protocol from client perspective
 do_leave(State, Ref, ChatName) ->
-    io:format("client:do_leave(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+    case maps:is_key(ChatName, State#cl_st.con_ch) of
+		false -> {err, State};
+		true -> whereis(server)!{self(), Ref, leave, ChatName},
+			receive
+				{_From, Ref, ack_leave} ->
+					NewState = #cl_st{
+						gui = State#cl_st.gui,
+						nick = State#cl_st.nick,
+						con_ch = maps:remove(ChatName, From, State#cl_st.con_ch)
+						},
+					{ok, NewState}
+				end
+			end
 
 %% executes `/nick` protocol from client perspective
 do_new_nick(State, Ref, NewNick) ->
-    io:format("client:do_new_nick(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+    case NewNick = State#cl_st.nick of 
+		true ->
+			{err_same, State};
+		false ->
+			whereis(server)!{self(), Ref, nick, NewNick},
+			receive
+				{_From, Ref, err_nick} ->
+					{err_nick, State};
+				{_From, Ref, ok_nick} ->
+					{ok_nick, #cl_st{
+						gui=State#cl_st.gui,
+						nick=NewNick,
+						con_ch=State#cl_st.con_ch
+						}}
+					end
+				end
 
 %% executes send message protocol from client perspective
 do_msg_send(State, Ref, ChatName, Message) ->
