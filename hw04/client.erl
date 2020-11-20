@@ -119,7 +119,7 @@ do_join(State, Ref, ChatName) ->
 						},
 					{History, NewState}
 				end
-			end
+			end.
 
 %% executes `/leave` protocol from client perspective
 do_leave(State, Ref, ChatName) ->
@@ -135,7 +135,7 @@ do_leave(State, Ref, ChatName) ->
 						},
 					{ok, NewState}
 				end
-			end
+			end.
 
 %% executes `/nick` protocol from client perspective
 do_new_nick(State, Ref, NewNick) ->
@@ -145,8 +145,8 @@ do_new_nick(State, Ref, NewNick) ->
 		false ->
 			whereis(server)!{self(), Ref, nick, NewNick},
 			receive
-				{_From, Ref, err_nick} ->
-					{err_nick, State};
+				{_From, Ref, err_nick_used} ->
+					{err_nick_used, State};
 				{_From, Ref, ok_nick} ->
 					{ok_nick, #cl_st{
 						gui=State#cl_st.gui,
@@ -154,12 +154,16 @@ do_new_nick(State, Ref, NewNick) ->
 						con_ch=State#cl_st.con_ch
 						}}
 					end
-				end
+				end.
 
 %% executes send message protocol from client perspective
 do_msg_send(State, Ref, ChatName, Message) ->
-    io:format("client:do_new_nick(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+   ChatPID = maps:get(ChatName, State#cl_st.con_ch),
+   ChatPID!{self(), Ref, message, Message},
+   receive
+	   	{ChatPID, Ref, ack_msg} ->
+			   {{msg_sent, State#cl_st.nick}, State}
+			end.
 
 %% executes new incoming message protocol from client perspective
 do_new_incoming_msg(State, _Ref, CliNick, ChatName, Msg) ->
@@ -169,5 +173,8 @@ do_new_incoming_msg(State, _Ref, CliNick, ChatName, Msg) ->
 
 %% executes quit protocol from client perspective
 do_quit(State, Ref) ->
-    io:format("client:do_new_nick(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+    whereis(server)!{self(), Ref, quit},
+		receive
+			{_From, Ref, ack_quit} ->
+				{ack_quit, State}
+			end.
