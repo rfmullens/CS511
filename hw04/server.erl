@@ -60,20 +60,51 @@ loop(State) ->
 
 %% executes join protocol from server perspective
 do_join(ChatName, ClientPID, Ref, State) ->
-    io:format("server:do_join(...): IMPLEMENT ME~n"),
-    State.
+    case maps:find(ChatName, State#serv_st.chatrooms) of
+		{ok, ChatPID} ->
+			ok;
+		error ->
+			ChatPID = spawn(chatroom, start_chatroom, [ChatName])
+		end,
+		Nick = maps:get(ClientPID, State#serv_st.nicks),
+		ChatPID ! {self(), Ref, register, ClientPID, Nick},
+		Registrations = State#serv_st.registrations,
+                       State#serv_st{
+                        registrations = maps:put(
+                            ChatName,
+                            maps:get(ChatName,Registrations) ++ [Nick],
+                            Registrations
+                        )}
+    end.
 
 %% executes leave protocol from server perspective
 do_leave(ChatName, ClientPID, Ref, State) ->
-    io:format("server:do_leave(...): IMPLEMENT ME~n"),
-    State.
+    ChatPID = maps:get(ChatName, State#serv_st.chatrooms),
+		NewState = #serv_st{
+				nicks = State#serv_st.nicks,
+				registrations = maps:update(ChatName, ClientPID, State#serv_st.registrations),
+				chatrooms = State#serv_st.chatrooms
+			},
+		ChatPID!{self(), Ref, unregister, ClientPID},
+		ClientPID!{self(), Ref, ack_leave},
+	NewState.
 
+nick_helper(Ref, ClientPID, NewNick, ChatroomPID) ->
+	ChatroomPID!{self(), ref, update_nick, ClientPID, NewNick}.
 %% executes new nickname protocol from server perspective
 do_new_nick(State, Ref, ClientPID, NewNick) ->
-    io:format("server:do_new_nick(...): IMPLEMENT ME~n"),
-    State.
+    case lists:any(fun(X) -> X == NewNick end, maps:values(State#serv_st.nicks)) of
+		true -> ClientPID!{self(), Ref, err_nick}, NewState = State;
+		false -> NewState = State#serv_st{nicks = maps:update(ClientPID, NewNick, State#serv_st.nicks)},
+		ChatroomPID = maps:values(State#serv_st.chatrooms),
+		lists:map(fun(Y) -> nick_helper(Ref, ClientPID, NewNick, Y) end, ChatroomPID),
+		ClientPID!{self(),Ref, ok_nick}
+	end,
+	NewState.
 
 %% executes client quit protocol from server perspective
 do_client_quit(State, Ref, ClientPID) ->
-    io:format("server:do_client_quit(...): IMPLEMENT ME~n"),
-    State.
+    NickMap = maps:remove(ClientPID, State#serv_st.nicks),
+	Registrations_New = maps:map(fun(I, J) when is_list(I) -> lists:delete(ClientPID, J) end, State#serv_st.registrations),
+	ClientPID!{self(), Ref, ack_quit},
+	State#serv_st{nicks = NickMap, registrations = Registrations_New}.
