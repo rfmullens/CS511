@@ -131,7 +131,7 @@ do_leave(State, Ref, ChatName) ->
 					NewState = #cl_st{
 						gui = State#cl_st.gui,
 						nick = State#cl_st.nick,
-						con_ch = maps:remove(ChatName, From, State#cl_st.con_ch)
+						con_ch = maps:remove(ChatName, State#cl_st.con_ch)
 						},
 					{ok, NewState}
 				end

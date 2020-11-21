@@ -68,14 +68,12 @@ do_join(ChatName, ClientPID, Ref, State) ->
 		end,
 		Nick = maps:get(ClientPID, State#serv_st.nicks),
 		ChatPID ! {self(), Ref, register, ClientPID, Nick},
-		Registrations = State#serv_st.registrations,
-                       State#serv_st{
-                        registrations = maps:put(
-                            ChatName,
-                            maps:get(ChatName,Registrations) ++ [Nick],
-                            Registrations
-                        )}
-    end.
+		NewState = #serv_st{
+						nicks = State#serv_st.nicks,
+						registrations = maps:put(ChatName, [ClientPID]++maps:get(ChatName, State#serv_st.registrations, []), State#serv_st.registrations),
+						chatrooms = maps:put(ChatName, ChatPID, State#serv_st.chatrooms)
+						},
+    NewState.
 
 %% executes leave protocol from server perspective
 do_leave(ChatName, ClientPID, Ref, State) ->

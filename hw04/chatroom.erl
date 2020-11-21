@@ -41,8 +41,8 @@ end,
 %% This function should register a new client to this chatroom
 do_register(State, Ref, ClientPID, ClientNick) ->
     
-	NewState = State#chat_st{registrations = maps:put(ClientPID, ClientNick,State#chat_st.registrations),}
-		ClientPID!{self(), Ref, connect, Newstate#chat_st.histroy},
+	NewState = State#chat_st{registrations = maps:put(ClientPID, ClientNick,State#chat_st.registrations)},
+		ClientPID!{self(), Ref, connect, NewState#chat_st.history},
 	NewState.
 
 %% This function should unregister a client from this chatroom
@@ -68,7 +68,7 @@ do_propegate_message(State, Ref, ClientPID, Message) ->
 				 {incoming_msg, SendNick, State#chat_st.name, Message}
 				}
 			end,
-			lists:filter(fun (PID) -> not (ClientPID == Pid) end, maps.keys(Registrations))
+			lists:filter(fun (PID) -> not (ClientPID == PID) end, maps:keys(Registrations))
 	),
 	ClientPID ! {self(), Ref, ack_msg},
 	State#chat_st{history = State#chat_st.history ++ [{SendNick, Message}]}.
