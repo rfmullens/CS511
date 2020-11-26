@@ -142,8 +142,7 @@ do_new_nick(State, Ref, NewNick) ->
     case NewNick == State#cl_st.nick of 
 		true ->
 			{err_same, State};
-		false ->
-			whereis(server)!{self(), Ref, nick, NewNick},
+		false -> whereis(server)!{self(), Ref, nick, NewNick},
 			receive
 				{_From, Ref, err_nick_used} ->
 					{err_nick_used, State};
@@ -176,5 +175,6 @@ do_quit(State, Ref) ->
     whereis(server)!{self(), Ref, quit},
 		receive
 			{_From, Ref, ack_quit} ->
-				{ack_quit, State}
-			end.
+				whereis(list_to_atom(State#cl_st.gui))!{self(), Ref, ack_quit}
+	end,
+    {ok_shutdown, State}.
