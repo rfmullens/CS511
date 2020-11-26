@@ -148,7 +148,11 @@ do_new_nick(State, Ref, NewNick) ->
 				{_From, Ref, err_nick_used} ->
 					{err_nick_used, State};
 				{_From, Ref, ok_nick} ->
-					 {ok_nick, State#cl_st{nick = NewNick}}
+					 {ok_nick, #cl_st{
+									 gui=State#cl_st.gui,
+									 nick=NewNick,
+									 con_ch=State#cl_st.con_ch
+									 }}
 					end
 				end.
 
