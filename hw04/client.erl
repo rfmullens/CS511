@@ -139,7 +139,7 @@ do_leave(State, Ref, ChatName) ->
 
 %% executes `/nick` protocol from client perspective
 do_new_nick(State, Ref, NewNick) ->
-    case NewNick = State#cl_st.nick of 
+    case NewNick == State#cl_st.nick of 
 		true ->
 			{err_same, State};
 		false ->
