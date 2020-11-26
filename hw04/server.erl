@@ -87,8 +87,7 @@ do_leave(ChatName, ClientPID, Ref, State) ->
 		ClientPID!{self(), Ref, ack_leave},
 	NewState.
 
-nick_helper(Ref, ClientPID, NewNick, ChatroomPID) ->
-	ChatroomPID!{self(), ref, update_nick, ClientPID, NewNick}.
+
 %% executes new nickname protocol from server perspective
 do_new_nick(State, Ref, ClientPID, NewNick) ->
     case lists:any(fun(X) -> X == NewNick end, maps:values(State#serv_st.nicks)) of
@@ -99,6 +98,9 @@ do_new_nick(State, Ref, ClientPID, NewNick) ->
 		ClientPID!{self(),Ref, ok_nick}
 	end,
 	NewState.
+
+nick_helper(Ref, ClientPID, NewNick, ChatroomPID) ->
+	ChatroomPID!{self(), ref, update_nick, ClientPID, NewNick}.
 
 %% executes client quit protocol from server perspective
 do_client_quit(State, Ref, ClientPID) ->
